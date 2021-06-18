@@ -18,6 +18,6 @@ for (i = 0; i < listdir.length; i++) {
                 str=listdir[i];
                 str2=replace(str,"/", "_prev");
                 saveAs("JPEG", outputDir + str2);
-                close();//finish
+                close();//close
         }
 }
