@@ -10,10 +10,10 @@ for (i = 0; i < listdir.length; i++) {
                 run("Make Composite", "display=Composite");
                 run("Next Slice [>]");
                 run("Green");
-                run("Enhance Contrast", "saturated=0.35");
+                run("Enhance Contrast", "saturated=0.35");//auto-contrast
                 run("Next Slice [>]");
                 run("Magenta");
-                run("Enhance Contrast", "saturated=0.35");
+                run("Enhance Contrast", "saturated=0.35");//auto-contrast
                 Stack.setActiveChannels("011");
                 str=listdir[i];
                 str2=replace(str,"/", "_prev");
