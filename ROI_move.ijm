@@ -1,16 +1,12 @@
-if (RoiManager.size>0) {
-	roiManager("deselect");
-	roiManager("delete");
-}
-//ROImanagerに既に登録されているROIを削除
+roiManager("reset")
 while (true) {
 	Slice_count = 1;
 	setSlice(1);
-	waitForUser("ROI selection", "移動前");
+	waitForUser("ROI selection", "Set the start point!");
 	Roi.getBounds(x1, y1, width1, height1);
 	slice1 = 1;
 	while(true) {
-		waitForUser("ROI selection", "移動後");
+		waitForUser("ROI selection", "Set the end point!");
 		Roi.getBounds(x2, y2, width2, height2);
 		slice2 = getSliceNumber();
 		Num_of_Slice = slice2-slice1+1;
@@ -30,8 +26,8 @@ while (true) {
 		}
 		if (slice1==1) {
 			if(slice2==nSlices) {
-				waitForUser("ROIをチェック!");
-				Checknum = getNumber("OK→1, やり直し→2", 1);
+				waitForUser("Check the ROI manager!");
+				Checknum = getNumber("OK!=>1, Don't like it...=>2", 1);
 				if (Checknum==1) {
 					break;
 				}
@@ -42,8 +38,8 @@ while (true) {
 				}
 			}
 			else{
-				waitForUser("ROIをチェック!");
-				Checknum = getNumber("OK→1, やり直し→2", 1);
+				waitForUser("Check the ROI manager!");
+				Checknum = getNumber("OK!=>1, Don't like it...=>2", 1);
 				if (Checknum==1) {
 					setSlice(slice2+1);
 				}
@@ -56,8 +52,8 @@ while (true) {
 		}
 		else {
 			if(slice2==nSlices) {
-				waitForUser("ROIをチェック!");
-				Checknum = getNumber("OK→1, やり直し→2", 1);
+				waitForUser("Check the ROI manager!");
+				Checknum = getNumber("OK!=>1, Don't like it...=>2", 1);
 				if (Checknum==1) {
 					break;
 				}
@@ -69,8 +65,8 @@ while (true) {
 				}
 			}
 			else{
-				waitForUser("ROIをチェック!");
-				Checknum = getNumber("OK→1, やり直し→2", 1);
+				waitForUser("Check the ROI manager!");
+				Checknum = getNumber("OK!=>1, Don't like it...=>2", 1);
 				if (Checknum==1) {
 					setSlice(slice2+1);
 				}
