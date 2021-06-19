@@ -1,4 +1,4 @@
-roiManager("reset")
+roiManager("reset");
 while (true) {
 	Slice_count = 1;
 	setSlice(1);
