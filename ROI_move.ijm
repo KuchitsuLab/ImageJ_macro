@@ -1,4 +1,4 @@
-roiManager("reset");
+roiManager("reset")
 while (true) {
 	Slice_count = 1;
 	setSlice(1);
@@ -53,7 +53,7 @@ while (true) {
 		else {
 			if(slice2==nSlices) {
 				waitForUser("Check the ROI manager!");
-				Checknum = getNumber("OK!=>1, Don't like it...=>2", 1);
+				Checknum = getNumber("OK!=>1, Don't like it...=>2 Reset all!!=>3", 1);
 				if (Checknum==1) {
 					break;
 				}
@@ -63,10 +63,16 @@ while (true) {
 					setSlice(slice1);
 					Slice_count = slice1;
 				}
+				if (Checknum==3) {
+					roiManager("deselect");
+					roiManager("delete");
+					break;
+				}
+
 			}
 			else{
 				waitForUser("Check the ROI manager!");
-				Checknum = getNumber("OK!=>1, Don't like it...=>2", 1);
+				Checknum = getNumber("OK!=>1, Don't like it...=>2, Reset all!!=>3", 1);
 				if (Checknum==1) {
 					setSlice(slice2+1);
 				}
@@ -75,6 +81,11 @@ while (true) {
 					roiManager("delete");
 					setSlice(slice1);
 					Slice_count = slice1;
+				}
+				if (Checknum==3) {
+					roiManager("deselect");
+					roiManager("delete");
+					break;
 				}
 			}
 		}
