@@ -1,78 +1,89 @@
 //解析したい動画があるフォルダを選択
-opendir = getDirectory("入力フォルダを選択")
+opendir = getDirectory("Choose a Directory to OPEN")
 //結果を出力するフォルダを選択
-savedir = getDirectory("出力フォルダを選択")
+savedir = getDirectory("Chopse a Directory to SAVE")
 moviedir = savedir+"\\movie"
 ROIimagedir = savedir+"\\ROIimage"
 Resultdir = savedir+"\\Result"
-ROI = getNumber("ROI数を入力", 2)
+ROI = getNumber("Enter the number of ROIs you want to make", 2)
 File.makeDirectory(moviedir);
 File.makeDirectory(ROIimagedir);
 File.makeDirectory(Resultdir);
+roiManager("reset");//roimanagerに既に登録されているROIを削除
 run("Clear Results");//Result table上の数値をクリア
 //ファルダ内のファイル名リストを参照元ディレクトリから配列で取得
 filelist = getFileList(opendir);
 //フォルダにある動画ファイルを二つずつ開いていく(RFP⇒GFPの順に撮影されている前提)
-for (k=0; k<filelist.length; k=k+2){
+for (k=0; k<filelist.length; k=k+2) {
 	open(opendir+"\\"+filelist[k]);
-	rename("2");
+	rename("RFP");
+	run("Z Project...", "projection=[Average Intensity]");
 	open(opendir+"\\"+filelist[k+1]);
-	rename("1");//ImageCalculatorとzprojectで画像処理
-	ratioimage();
-	for (i=0; i<=ROI-1; i++){
-		waitForUser("ROI selection", "ROIを選択");
+	rename("GFP");//ImageCalculatorとzprojectで画像処理
+	
+run("Z Project...", "stop=20 projection=[Average Intensity]");
+	selectWindow("GFP");
+	for (i=0; i<=ROI-1; i++) {
+		waitForUser("ROI selection", "Create a ROI");
 		roiManager("add");
 	}//ROIを手動で選択するとROImanagerに登録してくれる。
-	selectWindow("Result of Result of Result of 1");//登録したROI
-	roiManager("Select", 0);
-	run("Plot Z-axis Profile");
-	Plot.getValues(x, y);
-	for (i=0; i<x.length; i++){
-		setResult(filelist[k+1]+":time", i, x[i]);
-		setResult(filelist[k+1]+":ROI1", i, y[i]);
+	Interval = Stack.getFrameInterval();
+	if(Interval==0) {
+		Interval = 1;
+	}//たまに時間の情報がなくなる時があるのでそのケア
+	time = newArray(nSlices);
+	for (i=0; i<nSlices; i++) {
+		time[i] = i*Interval;
 	}
-	close();
-	for (i=1; i<=ROI-1; i++) {
+	for (i=0; i<time.length; i++) {
+		setResult(filelist[k+1]+":time", i, time[i]);
+	}	
+	for (i=0; i<=ROI-1; i++) {
 		ROInumber = filelist[k+1]+":ROI"+i+1;
-		roiManager("select", i);
-		run("Plot Z-axis Profile");
-		Plot.getValues(x, y);
-		for(j=0; j<x.length; j++){
-			setResult(ROInumber, j, y[j]); 
+		ratio = ratio_calculator(i);
+		for(j=0; j<ratio.length; j++) {
+			setResult(ROInumber, j, ratio[j]); 
 		}
-		close();
 	}
-	selectWindow("Result of Result of Result of 1");
-	close();
+
+	close("AVG_GFP");
+	close("AVG_RFP");
+	for (i=0; i<ROI-1; i++) {
+		length = ROI_distance(i);
+		setResult(filelist[k+1]+":distance", i, length);
+	}
 	ROIimagesave(k);
-	roiManager("deselect");
-	roiManager("delete");
+	roiManager("reset");
 	moviesave(k);
 	run("Close All");
 }
 
-//ratio画像を作成ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-function ratioimage(){
-	selectWindow("1");
-	run("Z Project...", "stop=20 projection=[Average Intensity]");
-	imageCalculator("Subtract create 32-bit stack", "1","AVG_1");
-	imageCalculator("Divide create 32-bit stack", "Result of 1","AVG_1");
-	selectWindow("Result of 1");
-	close();
-	selectWindow("2");
-	run("Z Project...", "projection=[Average Intensity]");
-	imageCalculator("Divide create 32-bit stack", "Result of Result of 1","AVG_2");
-	selectWindow("AVG_1");
-	close();
-	selectWindow("AVG_2");
-	close();
-	selectWindow("Result of Result of 1");
-	close();
+//(ΔF/F)/mCherryを計算ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+function ratio_calculator(a){
+	selectWindow("GFP");
+	roiManager("select", a);
+	GFP = newArray(nSlices);
+	for (i=0; i<nSlices; i++) {
+		setSlice(i+1);
+		getStatistics(area, mean); 
+		GFP[i] = mean;
+	}
+	selectWindow("AVG_GFP");
+	roiManager("select", a);
+	getStatistics(area, mean1);
+	selectWindow("AVG_RFP");
+	roiManager("select", a);
+	getStatistics(area, mean2);
+	ratio = newArray(GFP.length);
+	for (i=0; i<GFP.length; i++) {
+		ratio[i] = ((GFP[i]-mean1)/mean1)/mean2;
+	}
+	return ratio;
 }
-
+Array.print(ratio);
 //ROI情報入りの画像を保存ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
 function ROIimagesave(a){
-	selectWindow("1");
+	selectWindow("GFP");
 	run("Z Project...", "projection=[Average Intensity]");
 	setMinAndMax(0, 20);
 	run("Apply LUT");
@@ -83,19 +94,28 @@ function ROIimagesave(a){
     Overlay.flatten
 	saveAs("Jpeg", ROIimagedir+"\\"+filelist[a]);
 	close();
-	selectWindow("AVG_1");
-	close();
+	close("AVG_GFP");
+}
+
+//ROI感の距離を取得ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+function ROI_distance(a) {
+	roiManager("select", a);
+	Roi.getBounds(x1, y1, width, height);
+	roiManager("select", a+1);
+	Roi.getBounds(x2, y2, width, height);
+	makeLine(x1, y1, x2, y2);
+	length = getValue("Length"); 
+	return length;
 }
 
 //動画を軽量化して保存ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
 function moviesave(a){
-	selectWindow("1");
+	selectWindow("GFP");
 	setMinAndMax(0, 255);
 	makeLine(0, 0, 0, 0);
 	run("Size...", "width=400 height=400 constrain average interpolation=Bilinear");
 	saveAs("Tiff", moviedir+"\\"+filelist[a+1]);
-	selectWindow("2");
+	selectWindow("RFP");
 	run("Size...", "width=400 height=400 constrain average interpolation=Bilinear");
 	saveAs("Tiff", moviedir+"\\"+filelist[a]);
 }
-	
