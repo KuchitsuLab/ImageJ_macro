@@ -1,27 +1,30 @@
 //解析したい動画があるフォルダを選択
 opendir = getDirectory("Choose a Directory to OPEN")
+;
+foldername = File.getName(opendir);
 //結果を出力するフォルダを選択
-savedir = getDirectory("Chopse a Directory to SAVE")
+savedir = getDirectory("Chopse a Directory to SAVE")+"\\"+foldername;
 moviedir = savedir+"\\movie"
+;
 ROIimagedir = savedir+"\\ROIimage"
-Resultdir = savedir+"\\Result"
 ROI = getNumber("Enter the number of ROIs you want to make", 2)
+File.makeDirectory(savedir);//保存先フォルダの作成
 File.makeDirectory(moviedir);
 File.makeDirectory(ROIimagedir);
-File.makeDirectory(Resultdir);
+
+filelist = getFileList(opendir);//ファルダ内のファイル名リストを参照元ディレクトリから配列で取得
+run("Close All");
 roiManager("reset");//roimanagerに既に登録されているROIを削除
 run("Clear Results");//Result table上の数値をクリア
-//ファルダ内のファイル名リストを参照元ディレクトリから配列で取得
-filelist = getFileList(opendir);
 //フォルダにある動画ファイルを二つずつ開いていく(RFP⇒GFPの順に撮影されている前提)
 for (k=0; k<filelist.length; k=k+2) {
+	filename = File.getNameWithoutExtension(opendir+"\\"+filelist[k+1]);
 	open(opendir+"\\"+filelist[k]);
 	rename("RFP");
 	run("Z Project...", "projection=[Average Intensity]");
 	open(opendir+"\\"+filelist[k+1]);
 	rename("GFP");//ImageCalculatorとzprojectで画像処理
-	
-run("Z Project...", "stop=20 projection=[Average Intensity]");
+	run("Z Project...", "stop=20 projection=[Average Intensity]");
 	selectWindow("GFP");
 	for (i=0; i<=ROI-1; i++) {
 		waitForUser("ROI selection", "Create a ROI");
@@ -36,21 +39,25 @@ run("Z Project...", "stop=20 projection=[Average Intensity]");
 		time[i] = i*Interval;
 	}
 	for (i=0; i<time.length; i++) {
-		setResult(filelist[k+1]+":time", i, time[i]);
+		setResult(filename+":time", i, time[i]);
 	}	
 	for (i=0; i<=ROI-1; i++) {
-		ROInumber = filelist[k+1]+":ROI"+i+1;
+		ROInumber = filename+":ROI"+i+1;
 		ratio = ratio_calculator(i);
 		for(j=0; j<ratio.length; j++) {
 			setResult(ROInumber, j, ratio[j]); 
 		}
 	}
-
 	close("AVG_GFP");
 	close("AVG_RFP");
-	for (i=0; i<ROI-1; i++) {
-		length = ROI_distance(i);
-		setResult(filelist[k+1]+":distance", i, length);
+	if (ROI==1) {
+		setResult(filename+":distance", 0, 0);
+	}
+	else {
+		for (i=0; i<ROI-1; i++) {
+			length = ROI_distance(i);
+			setResult(filename+":distance", i, length);
+		}	
 	}
 	ROIimagesave(k);
 	roiManager("reset");
@@ -80,7 +87,6 @@ function ratio_calculator(a){
 	}
 	return ratio;
 }
-Array.print(ratio);
 //ROI情報入りの画像を保存ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
 function ROIimagesave(a){
 	selectWindow("GFP");
