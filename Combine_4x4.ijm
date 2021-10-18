@@ -9,7 +9,7 @@ for(i=1; i<=4; i=i+1){
 	open(opendir+"\\"+filelist[count]);
 	rename("Combine");
 	depth0 = nSlices;
-	run("Size...", "width=400 height=400 depth=depth0 constrain average interpolation=Bilinear");
+	run("Size...", "width=300 height=300 depth=depth0 constrain average interpolation=Bilinear");
 	for(j=1; j<4; j=j+1){
 		count = count + 1;
 		if(count>=filelist.length){
