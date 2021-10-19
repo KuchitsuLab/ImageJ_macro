@@ -1,0 +1,14 @@
+run("Z Project...", "stop=50 projection=[Average Intensity]");
+imageCalculator("Subtract create 32-bit stack", "1","AVG_1");
+selectWindow("Result of 1");
+run("Z Project...", "stop=50 projection=[Standard Deviation]");
+imageCalculator("Add create 32-bit", "STD_Result of 1","STD_Result of 1");
+selectWindow("Result of STD_Result of 1");
+imageCalculator("Add create 32-bit", "Result of STD_Result of 1","STD_Result of 1");
+selectWindow("Result of Result of STD_Result of 1");
+selectWindow("Result of STD_Result of 1");
+close();
+selectWindow("STD_Result of 1");
+close();
+imageCalculator("Subtract create 32-bit stack", "Result of 1","Result of Result of STD_Result of 1");
+selectWindow("Result of Result of 1");
